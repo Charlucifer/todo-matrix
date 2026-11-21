@@ -9,6 +9,11 @@ window.__ModuleLoader__.load({
     const MINUTE = 60 * 1000;
     const HOUR = 60 * MINUTE;
     const DAY = 24 * HOUR;
+    const MAX_NOTE_LENGTH = 2000;
+    const MAX_IMAGES = 3;
+    const MAX_IMAGE_DATA_LENGTH = 380000;
+    const MAX_IMAGE_EDGE = 1280;
+    const MAX_STORAGE_CHARS = 2400000;
 
     const ZH = {
       appTitle: '待办矩阵',
@@ -25,6 +30,20 @@ window.__ModuleLoader__.load({
       urgent: '紧急',
       dueLabel: 'DDL',
       noDeadline: '未设 DDL',
+      addDetails: '备注/图片',
+      noteLabel: '备注',
+      notePlaceholder: '补充说明、链接、取件码…',
+      imagesLabel: '图片',
+      addImage: '添加图片',
+      imageHint: '最多 3 张，压缩后仅存本机',
+      processingImage: '处理中…',
+      imageTooLarge: '图片太大，换一张试试',
+      imageTypeError: '只支持图片文件',
+      imageLimit: '最多 3 张图片',
+      removeImage: '移除图片',
+      imageAlt: '待办图片',
+      viewImage: '查看大图',
+      storageFull: '本机存储空间不足，本次修改未保存。请删除一些图片后重试。',
       emptyQuadrant: '拖拽待办到这里',
       emptyQuadrantHint: '或在上方添加一项',
       q1Title: '重要且紧急',
@@ -87,6 +106,20 @@ window.__ModuleLoader__.load({
       urgent: 'Urgent',
       dueLabel: 'Due',
       noDeadline: 'No deadline',
+      addDetails: 'Note & images',
+      noteLabel: 'Note',
+      notePlaceholder: 'Details, links, pickup codes…',
+      imagesLabel: 'Images',
+      addImage: 'Add image',
+      imageHint: 'Up to 3, compressed and stored locally',
+      processingImage: 'Processing…',
+      imageTooLarge: 'Image too large — try another',
+      imageTypeError: 'Images only',
+      imageLimit: 'Up to 3 images',
+      removeImage: 'Remove image',
+      imageAlt: 'Task image',
+      viewImage: 'View image',
+      storageFull: 'Local storage is full, so this change was not saved. Remove some images and try again.',
       emptyQuadrant: 'Drop a task here',
       emptyQuadrantHint: 'or add one above',
       q1Title: 'Important & urgent',
@@ -975,6 +1008,20 @@ window.__ModuleLoader__.load({
   color: var(--dsw-alias-label-secondary);
   font-size: 9px;
 }
+.dsh-todo-storage-warning {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 18px 8px;
+  padding: 7px 10px;
+  border: 1px solid color-mix(in srgb, var(--dsw-alias-state-error-primary) 30%, transparent);
+  border-radius: 10px;
+  color: var(--dsw-alias-state-error-primary);
+  background: color-mix(in srgb, var(--dsw-alias-state-error-primary) 9%, transparent);
+  font-size: 9.5px;
+  font-weight: 550;
+  line-height: 1.35;
+}
 
 .dsh-todo-toast {
   position: absolute;
@@ -1217,6 +1264,179 @@ window.__ModuleLoader__.load({
 }
 .dsh-todo-btn-primary:hover { filter: brightness(1.06); background: var(--dsw-alias-brand-primary); }
 
+.dsh-todo-details-toggle[data-kind="details"][data-on="true"] {
+  color: var(--dsw-alias-brand-primary);
+  border-color: color-mix(in srgb, var(--dsw-alias-brand-primary) 38%, transparent);
+  background: color-mix(in srgb, var(--dsw-alias-brand-primary) 11%, transparent);
+}
+.dsh-todo-count-bubble {
+  display: inline-grid;
+  place-items: center;
+  min-width: 15px;
+  height: 15px;
+  margin-left: 1px;
+  padding: 0 4px;
+  border-radius: 999px;
+  color: var(--dsw-alias-bg-base);
+  background: var(--dsw-alias-brand-primary);
+  font-size: 8px;
+  font-weight: 800;
+}
+.dsh-todo-add-extra {
+  display: flex;
+  flex: 1 1 100%;
+  flex-direction: column;
+  align-self: stretch;
+  gap: 2px;
+  padding: 3px 3px 1px;
+}
+.dsh-todo-note-input {
+  width: 100%;
+  min-height: 52px;
+  padding: 9px 10px;
+  border: 1px solid color-mix(in srgb, var(--dsw-alias-border-l1) 64%, transparent);
+  border-radius: 11px;
+  outline: none;
+  color: var(--dsw-alias-label-primary);
+  background: color-mix(in srgb, var(--dsw-alias-bg-base) 56%, transparent);
+  font: inherit;
+  font-size: 11px;
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.dsh-todo-note-input::placeholder { color: var(--dsw-alias-label-secondary); opacity: .78; }
+.dsh-todo-note-input:focus {
+  border-color: color-mix(in srgb, var(--dsw-alias-brand-primary) 58%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dsw-alias-brand-primary) 15%, transparent);
+}
+.dsh-todo-note-editor { min-height: 78px; font-size: 11.5px; }
+.dsh-todo-image-picker { display: flex; flex-direction: column; gap: 5px; }
+.dsh-todo-image-grid { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.dsh-todo-thumb {
+  position: relative;
+  width: 50px;
+  height: 48px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--dsw-alias-border-l1) 68%, transparent);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--dsw-alias-bg-base) 58%, transparent);
+}
+.dsh-todo-thumb img { display: block; width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
+.dsh-todo-thumb img:focus-visible {
+  outline: 2px solid var(--dsw-alias-brand-primary);
+  outline-offset: -2px;
+}
+.dsh-todo-thumb-remove {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--dsw-alias-bg-base);
+  background: color-mix(in srgb, var(--dsw-alias-label-primary) 62%, transparent);
+  cursor: pointer;
+  opacity: .88;
+}
+.dsh-todo-thumb-remove:hover { opacity: 1; }
+.dsh-todo-image-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 54px;
+  height: 48px;
+  padding: 0;
+  border: 1px dashed color-mix(in srgb, var(--dsw-alias-border-l2) 78%, transparent);
+  border-radius: 9px;
+  color: var(--dsw-alias-label-secondary);
+  background: color-mix(in srgb, var(--dsw-alias-bg-base) 34%, transparent);
+  font: inherit;
+  font-size: 7.5px;
+  line-height: 1.15;
+  cursor: pointer;
+  transition: border-color .15s ease, color .15s ease, background .15s ease;
+}
+.dsh-todo-image-add:hover,
+.dsh-todo-image-add[data-drag="true"] {
+  color: var(--dsw-alias-brand-primary);
+  border-color: color-mix(in srgb, var(--dsw-alias-brand-primary) 58%, transparent);
+  background: color-mix(in srgb, var(--dsw-alias-brand-primary) 9%, transparent);
+}
+.dsh-todo-image-add:disabled { opacity: .65; cursor: wait; }
+.dsh-todo-image-spinner { font-size: 16px; line-height: 1; }
+.dsh-todo-image-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 8.5px;
+  line-height: 1.3;
+}
+.dsh-todo-image-error { color: var(--dsw-alias-state-error-primary); font-weight: 600; text-align: right; }
+.dsh-todo-image-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 26px;
+  background: color-mix(in srgb, var(--dsw-alias-bg-base) 62%, transparent);
+  backdrop-filter: blur(12px);
+  animation: dshTodoFadeIn .15s ease-out;
+}
+.dsh-todo-image-preview img {
+  display: block;
+  width: auto;
+  max-width: min(820px, 92%);
+  max-height: 86%;
+  border: 1px solid color-mix(in srgb, var(--dsw-alias-border-l1) 70%, transparent);
+  border-radius: 14px;
+  object-fit: contain;
+  box-shadow: 0 24px 70px color-mix(in srgb, var(--dsw-alias-label-primary) 24%, transparent);
+}
+.dsh-todo-image-preview-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--dsw-alias-border-l1) 60%, transparent);
+  border-radius: 50%;
+  color: var(--dsw-alias-label-primary);
+  background: color-mix(in srgb, var(--dsw-alias-bg-overlay) 78%, transparent);
+  cursor: pointer;
+}
+.dsh-todo-item-note {
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 9.5px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+.dsh-todo-item-images { display: flex; gap: 4px; margin-top: 4px; }
+.dsh-todo-item-images img {
+  width: 34px;
+  height: 34px;
+  border: 1px solid color-mix(in srgb, var(--dsw-alias-border-l1) 64%, transparent);
+  border-radius: 7px;
+  object-fit: cover;
+}
+
 @keyframes dshTodoFadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes dshTodoPop {
   from { opacity: 0; transform: translateY(14px) scale(.986); }
@@ -1378,6 +1598,75 @@ window.__ModuleLoader__.load({
       return (diff < 0 ? t('overdue') : t('remaining')) + ' ' + delta.value + ' ' + t(delta.unitKey);
     }
 
+    function normalizeImages(rawImages) {
+      if (!Array.isArray(rawImages)) return [];
+      return rawImages.map((image, index) => {
+        if (typeof image === 'string') {
+          return image.startsWith('data:image/') ? { id: 'image-' + index, src: image, name: '' } : null;
+        }
+        if (!image || typeof image !== 'object') return null;
+        if (typeof image.src !== 'string' || !image.src.startsWith('data:image/')) return null;
+        return {
+          id: String(image.id || 'image-' + index),
+          src: image.src,
+          name: String(image.name || '').slice(0, 80)
+        };
+      }).filter(Boolean).slice(0, MAX_IMAGES);
+    }
+
+    function compressImageFile(file) {
+      return new Promise((resolve, reject) => {
+        if (!file || !String(file.type).startsWith('image/')) {
+          reject(new Error('type'));
+          return;
+        }
+        if (file.size > 25 * 1024 * 1024) {
+          reject(new Error('large'));
+          return;
+        }
+        const objectUrl = URL.createObjectURL(file);
+        const image = new Image();
+        image.onload = () => {
+          try {
+            let scale = Math.min(1, MAX_IMAGE_EDGE / Math.max(image.naturalWidth, image.naturalHeight));
+            let width = Math.max(1, Math.round(image.naturalWidth * scale));
+            let height = Math.max(1, Math.round(image.naturalHeight * scale));
+            let quality = 0.82;
+            let data = '';
+            for (let attempt = 0; attempt < 4; attempt += 1) {
+              const canvas = document.createElement('canvas');
+              canvas.width = width;
+              canvas.height = height;
+              const context = canvas.getContext('2d');
+              if (!context) throw new Error('canvas');
+              context.fillStyle = '#ffffff';
+              context.fillRect(0, 0, width, height);
+              context.drawImage(image, 0, 0, width, height);
+              data = canvas.toDataURL('image/jpeg', quality);
+              if (data.length <= MAX_IMAGE_DATA_LENGTH) break;
+              quality = Math.max(0.5, quality - 0.1);
+              width = Math.max(1, Math.round(width * 0.82));
+              height = Math.max(1, Math.round(height * 0.82));
+            }
+            if (data.length > MAX_IMAGE_DATA_LENGTH) {
+              reject(new Error('large'));
+              return;
+            }
+            resolve({ id: makeId(), src: data, name: String(file.name || '').slice(0, 80) });
+          } catch (error) {
+            reject(error);
+          } finally {
+            URL.revokeObjectURL(objectUrl);
+          }
+        };
+        image.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error('decode'));
+        };
+        image.src = objectUrl;
+      });
+    }
+
     function normalizeTodo(raw) {
       if (!raw || typeof raw !== 'object') return null;
       const title = String(raw.title || '').trim().slice(0, 120);
@@ -1390,6 +1679,8 @@ window.__ModuleLoader__.load({
         important: Boolean(raw.important),
         urgent: Boolean(raw.urgent),
         due,
+        note: String(raw.note || '').slice(0, MAX_NOTE_LENGTH),
+        images: normalizeImages(raw.images),
         createdAt: Number(raw.createdAt) || Date.now()
       };
     }
@@ -1407,16 +1698,9 @@ window.__ModuleLoader__.load({
     }
 
     function createStore() {
-      let state = { todos: loadTodos(), open: false };
+      let state = { todos: loadTodos(), open: false, storageError: false };
       const listeners = new Set();
       const emit = () => listeners.forEach((listener) => listener());
-      const persist = () => {
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(state.todos));
-        } catch (error) {
-          /* Storage can be unavailable in restricted origins; keep the board in memory. */
-        }
-      };
       return {
         get() {
           return state;
@@ -1426,9 +1710,30 @@ window.__ModuleLoader__.load({
           return () => listeners.delete(listener);
         },
         setTodos(updater) {
-          state = { ...state, todos: typeof updater === 'function' ? updater(state.todos) : updater };
-          persist();
+          const nextTodos = typeof updater === 'function' ? updater(state.todos) : updater;
+          let serialized = '';
+          try {
+            serialized = JSON.stringify(nextTodos);
+          } catch (error) {
+            state = { ...state, storageError: true };
+            emit();
+            return false;
+          }
+          if (serialized.length > MAX_STORAGE_CHARS) {
+            state = { ...state, storageError: true };
+            emit();
+            return false;
+          }
+          try {
+            localStorage.setItem(STORAGE_KEY, serialized);
+          } catch (error) {
+            state = { ...state, storageError: true };
+            emit();
+            return false;
+          }
+          state = { ...state, todos: nextTodos, storageError: false };
           emit();
+          return true;
         },
         setOpen(open) {
           if (state.open === open) return;
@@ -1493,6 +1798,10 @@ window.__ModuleLoader__.load({
           return h('g', null, h('path', { d: 'M6.5 10a5.5 5.5 0 0111 0c0 4 1.5 5.5 2.3 6.4H4.2C5 15.5 6.5 14 6.5 10z' }), h('path', { d: 'M10 19.2a2.3 2.3 0 004 0' }));
         case 'calendar':
           return h('g', null, h('rect', { x: 3.5, y: 5.5, width: 17, height: 15, rx: 3 }), h('path', { d: 'M8 3v4M16 3v4M3.5 10.5h17' }));
+        case 'note':
+          return h('g', null, h('path', { d: 'M6 3.5h8l4 4v13H6z' }), h('path', { d: 'M14 3.5v4h4M9 12h6M9 16h4' }));
+        case 'image':
+          return h('g', null, h('rect', { x: 3.5, y: 4.5, width: 17, height: 15, rx: 3 }), h('circle', { cx: 9, cy: 10, r: 1.5 }), h('path', { d: 'M4.5 17l5-5 3.2 3.2 2.3-2.3 4.5 4.6' }));
         case 'flag':
           return h('g', null, h('path', { d: 'M6 21V4M6 4.5h11l-2.3 4L17 13H6' }));
         case 'spark':
@@ -1580,11 +1889,138 @@ window.__ModuleLoader__.load({
       );
     }
 
+    function ImagePicker({ images, onChange, t }) {
+      const inputRef = React.useRef(null);
+      const [busy, setBusy] = React.useState(false);
+      const [error, setError] = React.useState('');
+      const [dragOver, setDragOver] = React.useState(false);
+      const [preview, setPreview] = React.useState(null);
+      const remaining = MAX_IMAGES - images.length;
+
+      const addFiles = async (fileList) => {
+        const files = Array.from(fileList || []);
+        if (!files.length) return;
+        const imageFiles = files.filter((file) => String(file.type).startsWith('image/'));
+        if (!imageFiles.length) {
+          setError(t('imageTypeError'));
+          return;
+        }
+        if (remaining <= 0) {
+          setError(t('imageLimit'));
+          return;
+        }
+        const accepted = imageFiles.slice(0, remaining);
+        setError(imageFiles.length > remaining ? t('imageLimit') : '');
+        setBusy(true);
+        const next = [];
+        for (const file of accepted) {
+          try {
+            next.push(await compressImageFile(file));
+          } catch (err) {
+            setError(err && err.message === 'large' ? t('imageTooLarge') : t('imageTypeError'));
+          }
+        }
+        if (next.length) onChange(images.concat(next));
+        setBusy(false);
+      };
+
+      return h('div', { className: 'dsh-todo-image-picker' },
+        h('div', { className: 'dsh-todo-image-grid' },
+          images.map((image) => h('div', { className: 'dsh-todo-thumb', key: image.id },
+            h('img', {
+              src: image.src,
+              alt: image.name || t('imageAlt'),
+              draggable: false,
+              role: 'button',
+              tabIndex: 0,
+              title: t('viewImage'),
+              onClick: () => setPreview(image),
+              onKeyDown: (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  setPreview(image);
+                }
+              }
+            }),
+            h('button', {
+              type: 'button',
+              className: 'dsh-todo-thumb-remove',
+              title: t('removeImage'),
+              'aria-label': t('removeImage'),
+              onClick: () => onChange(images.filter((item) => item.id !== image.id))
+            }, h(Icon, { name: 'x', size: 9, strokeWidth: 2.4 }))
+          )),
+          images.length < MAX_IMAGES
+            ? h('button', {
+              type: 'button',
+              className: 'dsh-todo-image-add',
+              'data-drag': dragOver ? 'true' : 'false',
+              title: t('addImage'),
+              'aria-label': t('addImage'),
+              disabled: busy,
+              onClick: () => {
+                if (inputRef.current) inputRef.current.click();
+              },
+              onDragOver: (event) => {
+                event.preventDefault();
+                setDragOver(true);
+              },
+              onDragLeave: () => setDragOver(false),
+              onDrop: (event) => {
+                event.preventDefault();
+                setDragOver(false);
+                if (!busy) addFiles(event.dataTransfer.files);
+              }
+            },
+              busy ? h('span', { className: 'dsh-todo-image-spinner' }, '…') : h(Icon, { name: 'image', size: 16 }),
+              h('span', null, busy ? t('processingImage') : t('addImage'))
+            )
+            : null
+        ),
+        h('input', {
+          ref: inputRef,
+          type: 'file',
+          accept: 'image/*',
+          multiple: true,
+          style: { display: 'none' },
+          onChange: (event) => {
+            addFiles(event.target.files);
+            event.target.value = '';
+          }
+        }),
+        h('div', { className: 'dsh-todo-image-meta' },
+          h('span', null, t('imageHint')),
+          error ? h('span', { className: 'dsh-todo-image-error', role: 'alert' }, error) : null
+        ),
+        preview ? h('div', {
+          className: 'dsh-todo-image-preview',
+          role: 'dialog',
+          'aria-modal': 'true',
+          'aria-label': preview.name || t('imageAlt'),
+          onMouseDown: (event) => {
+            if (event.target === event.currentTarget) setPreview(null);
+          }
+        },
+          h('img', { src: preview.src, alt: preview.name || t('imageAlt') }),
+          h('button', {
+            type: 'button',
+            className: 'dsh-todo-image-preview-close',
+            title: t('close'),
+            'aria-label': t('close'),
+            onClick: () => setPreview(null)
+          }, h(Icon, { name: 'x', size: 16 }))
+        ) : null
+      );
+    }
+
     function AddForm({ t, onAdd }) {
       const [title, setTitle] = React.useState('');
       const [due, setDue] = React.useState('');
       const [important, setImportant] = React.useState(false);
       const [urgent, setUrgent] = React.useState(false);
+      const [note, setNote] = React.useState('');
+      const [images, setImages] = React.useState([]);
+      const [detailsOpen, setDetailsOpen] = React.useState(false);
       const [invalid, setInvalid] = React.useState(false);
       const inputRef = React.useRef(null);
 
@@ -1600,11 +2036,22 @@ window.__ModuleLoader__.load({
           if (inputRef.current) inputRef.current.focus();
           return;
         }
-        onAdd({ title: trimmed, due: fromDateTimeInput(due), important, urgent });
+        const added = onAdd({
+          title: trimmed,
+          due: fromDateTimeInput(due),
+          important,
+          urgent,
+          note: note.trim().slice(0, MAX_NOTE_LENGTH),
+          images
+        });
+        if (added === false) return;
         setTitle('');
         setDue('');
         setImportant(false);
         setUrgent(false);
+        setNote('');
+        setImages([]);
+        setDetailsOpen(false);
         setInvalid(false);
         if (inputRef.current) inputRef.current.focus();
       };
@@ -1649,10 +2096,40 @@ window.__ModuleLoader__.load({
           'aria-pressed': urgent,
           onClick: () => setUrgent(!urgent)
         }, h(Icon, { name: 'bolt', size: 12 }), t('urgent')),
+        h('button', {
+          type: 'button',
+          className: 'dsh-todo-toggle dsh-todo-details-toggle',
+          'data-kind': 'details',
+          'data-on': (detailsOpen || note.trim() || images.length) ? 'true' : 'false',
+          'aria-expanded': detailsOpen,
+          title: t('addDetails'),
+          onClick: () => setDetailsOpen(!detailsOpen)
+        },
+          h(Icon, { name: 'note', size: 12 }),
+          t('addDetails'),
+          images.length ? h('span', { className: 'dsh-todo-count-bubble' }, String(images.length)) : null
+        ),
         h('button', { type: 'submit', className: 'dsh-todo-add-btn' },
           h(Icon, { name: 'plus', size: 13, strokeWidth: 2.1 }),
           t('addButton')
-        )
+        ),
+        detailsOpen ? h('div', { className: 'dsh-todo-add-extra' },
+          h('label', { className: 'dsh-todo-field' },
+            h('span', { className: 'dsh-todo-label' }, t('noteLabel')),
+            h('textarea', {
+              className: 'dsh-todo-note-input',
+              rows: 2,
+              maxLength: MAX_NOTE_LENGTH,
+              value: note,
+              placeholder: t('notePlaceholder'),
+              onChange: (event) => setNote(event.target.value)
+            })
+          ),
+          h('div', { className: 'dsh-todo-field' },
+            h('span', { className: 'dsh-todo-label' }, t('imagesLabel')),
+            h(ImagePicker, { images, onChange: setImages, t })
+          )
+        ) : null
       );
     }
 
@@ -1693,13 +2170,22 @@ window.__ModuleLoader__.load({
           }
         },
           h('div', { className: 'dsh-todo-item-title' }, todo.title),
+          todo.note ? h('div', { className: 'dsh-todo-item-note' }, todo.note) : null,
           h('div', { className: 'dsh-todo-item-meta' },
             h('span', { className: 'dsh-todo-due' },
               h(Icon, { name: due.overdue ? 'alert' : 'clock', size: 9 }),
               h('span', null, due.text)
             ),
             todo.urgent && !todo.done ? h('span', { className: 'dsh-todo-tag-urgent' }, t('urgent')) : null
-          )
+          ),
+          todo.images && todo.images.length
+            ? h('div', { className: 'dsh-todo-item-images' }, todo.images.slice(0, MAX_IMAGES).map((image) => h('img', {
+              key: image.id,
+              src: image.src,
+              alt: image.name || t('imageAlt'),
+              draggable: false
+            })))
+            : null
         )
       );
     }
@@ -1948,6 +2434,8 @@ window.__ModuleLoader__.load({
       const [due, setDue] = React.useState(toDateTimeInput(todo.due));
       const [important, setImportant] = React.useState(todo.important);
       const [urgent, setUrgent] = React.useState(todo.urgent);
+      const [note, setNote] = React.useState(todo.note || '');
+      const [images, setImages] = React.useState(() => Array.isArray(todo.images) ? todo.images : []);
       const [confirmDelete, setConfirmDelete] = React.useState(false);
       const titleRef = React.useRef(null);
       const timerRef = React.useRef(null);
@@ -1967,7 +2455,15 @@ window.__ModuleLoader__.load({
           if (titleRef.current) titleRef.current.focus();
           return;
         }
-        onSave(todo.id, { title: trimmed, due: fromDateTimeInput(due), important, urgent });
+        const saved = onSave(todo.id, {
+          title: trimmed,
+          due: fromDateTimeInput(due),
+          important,
+          urgent,
+          note: note.trim().slice(0, MAX_NOTE_LENGTH),
+          images
+        });
+        if (saved === false) return;
       };
 
       const askDelete = () => {
@@ -2023,6 +2519,21 @@ window.__ModuleLoader__.load({
               onChange: (event) => setDue(event.target.value)
             })
           ),
+          h('label', { className: 'dsh-todo-field' },
+            h('span', { className: 'dsh-todo-label' }, t('noteLabel')),
+            h('textarea', {
+              className: 'dsh-todo-note-input dsh-todo-note-editor',
+              rows: 3,
+              maxLength: MAX_NOTE_LENGTH,
+              value: note,
+              placeholder: t('notePlaceholder'),
+              onChange: (event) => setNote(event.target.value)
+            })
+          ),
+          h('div', { className: 'dsh-todo-field' },
+            h('span', { className: 'dsh-todo-label' }, t('imagesLabel')),
+            h(ImagePicker, { images, onChange: setImages, t })
+          ),
           h('div', { className: 'dsh-todo-field' },
             h('span', { className: 'dsh-todo-label' }, t('quadrantLabel')),
             h('span', { className: 'dsh-todo-quad-preview', style: { '--q-tone': quad.tone } },
@@ -2069,7 +2580,7 @@ window.__ModuleLoader__.load({
       );
     }
 
-    function Panel({ todos, store, t, lang, onClose }) {
+    function Panel({ todos, store, t, lang, onClose, storageError }) {
       const [editingId, setEditingId] = React.useState(null);
       const [selectedDate, setSelectedDate] = React.useState(null);
       const [cursor, setCursor] = React.useState(() => {
@@ -2110,29 +2621,33 @@ window.__ModuleLoader__.load({
       };
 
       const updateTodo = (id, patch) => {
-        store.setTodos((list) => list.map((todo) => todo.id === id ? { ...todo, ...patch } : todo));
+        return store.setTodos((list) => list.map((todo) => todo.id === id ? { ...todo, ...patch } : todo));
       };
       const addTodo = (draft) => {
-        store.setTodos((list) => [{
+        return store.setTodos((list) => [{
           id: makeId(),
           title: draft.title,
           important: draft.important,
           urgent: draft.urgent,
           due: draft.due,
+          note: draft.note || '',
+          images: Array.isArray(draft.images) ? draft.images : [],
           done: false,
           createdAt: Date.now()
         }, ...list]);
       };
       const toggleTodo = (id) => {
-        store.setTodos((list) => list.map((todo) => todo.id === id ? { ...todo, done: !todo.done } : todo));
+        return store.setTodos((list) => list.map((todo) => todo.id === id ? { ...todo, done: !todo.done } : todo));
       };
       const deleteTodo = (id) => {
-        store.setTodos((list) => list.filter((todo) => todo.id !== id));
-        setEditingId(null);
+        const removed = store.setTodos((list) => list.filter((todo) => todo.id !== id));
+        if (removed !== false) setEditingId(null);
+        return removed;
       };
       const saveTodo = (id, patch) => {
-        updateTodo(id, patch);
-        setEditingId(null);
+        const saved = updateTodo(id, patch);
+        if (saved !== false) setEditingId(null);
+        return saved;
       };
       const moveTodo = (id, quad) => {
         updateTodo(id, { important: quad.key === 'q1' || quad.key === 'q2', urgent: quad.key === 'q1' || quad.key === 'q3' });
@@ -2216,6 +2731,10 @@ window.__ModuleLoader__.load({
               })
             )
           ),
+          storageError ? h('div', { className: 'dsh-todo-storage-warning', role: 'alert' },
+            h(Icon, { name: 'alert', size: 12 }),
+            h('span', null, t('storageFull'))
+          ) : null,
           h('footer', { className: 'dsh-todo-foot' },
             h('span', null, t('dragHint')),
             h('span', null, t('persistHint'))
@@ -2244,6 +2763,7 @@ window.__ModuleLoader__.load({
           store,
           t,
           lang,
+          storageError: state.storageError,
           onClose: () => store.setOpen(false)
         }) : null
       );
