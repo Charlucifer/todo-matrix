@@ -24,13 +24,13 @@
 在 DSH 的插件管理中使用 `install_bundle`，安装目标填写：
 
 ```text
-github:Charlucifer/todo-matrix#v1.0.0
+github:Charlucifer/todo-matrix#v1.1.0
 ```
 
 也可以使用完整地址：
 
 ```text
-https://github.com/Charlucifer/todo-matrix.git#v1.0.0
+https://github.com/Charlucifer/todo-matrix.git#v1.1.0
 ```
 
 安装完成后，侧边栏底部、设置按钮旁边会出现网格图标入口。展开侧栏时显示「待办矩阵」，收起时显示图标和紧急数量角标。
